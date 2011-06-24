@@ -1,0 +1,2 @@
+# JGit redis connector
+
