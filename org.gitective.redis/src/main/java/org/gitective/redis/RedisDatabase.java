@@ -34,6 +34,7 @@ import org.eclipse.jgit.storage.dht.spi.RepositoryTable;
 import org.eclipse.jgit.storage.dht.spi.WriteBuffer;
 import org.eclipse.jgit.util.FS;
 
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Protocol;
 
@@ -41,6 +42,8 @@ import redis.clients.jedis.Protocol;
  * Redis-backed database
  */
 public class RedisDatabase implements Database {
+
+	private final ConnectionProvider provider;
 
 	private final RedisRepositoryIndexTable repositoryIndex;
 
@@ -53,10 +56,10 @@ public class RedisDatabase implements Database {
 	private final RedisChunkTable chunk;
 
 	/**
-	 * Create redis-backed database
+	 * Create a redis-backed database
 	 */
 	public RedisDatabase() {
-		PoolConnectionProvider provider = new PoolConnectionProvider(new JedisPool("localhost",
+		provider = new PoolConnectionProvider(new JedisPool("localhost",
 				Protocol.DEFAULT_PORT));
 		repositoryIndex = new RedisRepositoryIndexTable(provider);
 		repository = new RedisRepositoryTable(provider);
@@ -100,5 +103,24 @@ public class RedisDatabase implements Database {
 
 	public WriteBuffer newWriteBuffer() {
 		return new RedisWriteBuffer();
+	}
+
+	/**
+	 * Save database to disk
+	 * 
+	 * @param synchronously
+	 * @return this database
+	 */
+	public RedisDatabase save(boolean synchronously) {
+		Jedis connection = provider.acquire();
+		try {
+			if (synchronously)
+				connection.save();
+			else
+				connection.bgsave();
+		} finally {
+			provider.release(connection);
+		}
+		return this;
 	}
 }
