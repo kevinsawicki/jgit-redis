@@ -21,3 +21,21 @@ config.save();
 RefSpec spec = new RefSpec("refs/heads/*:refs/remotes/origin/*");
 Git.wrap(repo).fetch().setRemote("origin").setRefSpecs(spec).call();
 ```
+
+## Building from source
+The JGit-Redis connector can be built using [Maven](http://maven.apache.org/).
+The pom.xml to build the core plug-in is located at the root of the org.gitective.redis folder.
+
+```
+cd jgit-redis/org.gitective.redis
+mvn clean install
+```
+
+## Dependencies
+
+* JGit 1.0+
+* Jedis 2.0+
+
+## License
+
+[MIT License](http://www.opensource.org/licenses/mit-license.php)
