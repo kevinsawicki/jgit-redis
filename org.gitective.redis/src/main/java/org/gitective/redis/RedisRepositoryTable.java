@@ -26,7 +26,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jgit.generated.storage.dht.proto.GitStore.CachedPackInfo;
@@ -111,10 +110,11 @@ public class RedisRepositoryTable extends RedisClient implements
 			throws DhtException, TimeoutException {
 		Jedis connection = acquire();
 		try {
-			Map<byte[], byte[]> values = connection.hgetAll(CACHE_PACK
-					.append(repo.asBytes()));
-			List<CachedPackInfo> out = new ArrayList<CachedPackInfo>(4);
-			for (byte[] value : values.values())
+			Collection<byte[]> values = connection.hgetAll(
+					CACHE_PACK.append(repo.asBytes())).values();
+			List<CachedPackInfo> out = new ArrayList<CachedPackInfo>(
+					values.size());
+			for (byte[] value : values)
 				out.add(CachedPackInfo.parseFrom(value));
 			return out;
 		} catch (InvalidProtocolBufferException e) {
