@@ -90,20 +90,31 @@ public class RedisRefTable extends RedisClient implements RefTable {
 		}
 	}
 
-	public boolean compareAndPut(RefKey refKey, RefData oldData, RefData newData)
-			throws DhtException, TimeoutException {
-		byte[] repo = refKey.getRepositoryKey().asBytes();
-		byte[] ref = Constants.encode(refKey.getName());
+	/**
+	 * Is current
+	 * 
+	 * @param ref
+	 * @param key
+	 * @param oldData
+	 * @param jedis
+	 * @return true if change, false otherwse
+	 */
+	protected boolean equal(byte[] ref, byte[] key, RefData oldData, Jedis jedis) {
 		byte[] oldBytes = oldData != RefDataUtil.NONE ? oldData.toByteArray()
 				: null;
+		return equal(oldBytes, jedis.hget(key, ref));
+	}
+
+	public boolean compareAndPut(RefKey refKey, RefData oldData, RefData newData)
+			throws DhtException, TimeoutException {
 		Jedis jedis = acquire();
 		try {
-			byte[] key = REFS.append(repo);
-			byte[] currBytes = jedis.hget(key, ref);
-			boolean changed = changed(oldBytes, currBytes);
-			if (changed)
+			byte[] ref = Constants.encode(refKey.getName());
+			byte[] key = REFS.append(refKey.getRepositoryKey().asBytes());
+			boolean same = equal(ref, key, oldData, jedis);
+			if (same)
 				jedis.hset(key, ref, newData.toByteArray());
-			return changed;
+			return same;
 		} finally {
 			release(jedis);
 		}
@@ -111,18 +122,14 @@ public class RedisRefTable extends RedisClient implements RefTable {
 
 	public boolean compareAndRemove(RefKey refKey, RefData oldData)
 			throws DhtException, TimeoutException {
-		byte[] repo = refKey.getRepositoryKey().asBytes();
-		byte[] ref = Constants.encode(refKey.getName());
-		byte[] oldBytes = oldData != RefDataUtil.NONE ? oldData.toByteArray()
-				: null;
 		Jedis jedis = acquire();
 		try {
-			byte[] key = REFS.append(repo);
-			byte[] currBytes = jedis.hget(key, ref);
-			boolean changed = changed(oldBytes, currBytes);
-			if (changed)
+			byte[] ref = Constants.encode(refKey.getName());
+			byte[] key = REFS.append(refKey.getRepositoryKey().asBytes());
+			boolean same = equal(ref, key, oldData, jedis);
+			if (same)
 				jedis.hdel(key, ref);
-			return changed;
+			return same;
 		} finally {
 			release(jedis);
 		}

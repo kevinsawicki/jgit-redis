@@ -32,13 +32,13 @@ import redis.clients.jedis.JedisPool;
 public class RedisClient {
 
 	/**
-	 * Are the two given byte arrays different?
+	 * Are the two given byte arrays equal?
 	 * 
 	 * @param old
 	 * @param current
-	 * @return true if different, false if same
+	 * @return true if equal, false if different
 	 */
-	public static boolean changed(byte[] old, byte[] current) {
+	public static boolean equal(byte[] old, byte[] current) {
 		return (old == null && current == null) || Arrays.equals(old, current);
 	}
 
