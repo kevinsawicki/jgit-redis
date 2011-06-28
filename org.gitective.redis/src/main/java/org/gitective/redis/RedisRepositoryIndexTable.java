@@ -23,6 +23,7 @@ package org.gitective.redis;
 
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.storage.dht.DhtException;
 import org.eclipse.jgit.storage.dht.RepositoryKey;
 import org.eclipse.jgit.storage.dht.RepositoryName;
@@ -37,7 +38,7 @@ import redis.clients.jedis.JedisPool;
 public class RedisRepositoryIndexTable extends RedisClient implements
 		RepositoryIndexTable {
 
-	private static final String REPOS = "repos";
+	private static final byte[] REPOS = Constants.encode("repos");
 
 	/**
 	 * 
@@ -64,8 +65,8 @@ public class RedisRepositoryIndexTable extends RedisClient implements
 			TimeoutException {
 		Jedis connection = acquire();
 		try {
-			String key = connection.hget(REPOS, name.asString());
-			return key != null ? RepositoryKey.fromString(key) : null;
+			byte[] key = connection.hget(REPOS, name.asBytes());
+			return key != null ? RepositoryKey.fromBytes(key) : null;
 		} finally {
 			release(connection);
 		}
@@ -75,7 +76,7 @@ public class RedisRepositoryIndexTable extends RedisClient implements
 			throws DhtException, TimeoutException {
 		Jedis connection = acquire();
 		try {
-			connection.hset(REPOS, name.asString(), key.asString());
+			connection.hset(REPOS, name.asBytes(), key.asBytes());
 		} finally {
 			release(connection);
 		}
@@ -85,9 +86,9 @@ public class RedisRepositoryIndexTable extends RedisClient implements
 			throws DhtException, TimeoutException {
 		Jedis connection = acquire();
 		try {
-			String nameKey = name.asString();
-			String value = connection.hget(REPOS, nameKey);
-			if (key.asString().equals(value))
+			byte[] nameKey = name.asBytes();
+			byte[] value = connection.hget(REPOS, nameKey);
+			if (equal(value, key.asBytes()))
 				connection.hdel(REPOS, nameKey);
 		} finally {
 			release(connection);
