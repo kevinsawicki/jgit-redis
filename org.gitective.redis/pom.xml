@@ -20,7 +20,7 @@
 	<scm>
 		<url>https://github.com/kevinsawicki/jgit-redis</url>
 		<connection>scm:git:git://github.com/kevinsawicki/jgit-redis.git</connection>
-		<tag>v0.6</tag>
+		<developerConnection>scm:git:git@github.com:kevinsawicki/jgit-redis.git</developerConnection>
 	</scm>
 	<developers>
 		<developer>
